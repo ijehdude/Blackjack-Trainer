@@ -146,21 +146,23 @@ function PlayerHandDisplay({
   const bust = value > 21;
   const result = hand.result;
 
-  const resultColor = {
+  const colorMap: Record<string, string> = {
     win: "text-green-400",
     blackjack: "text-yellow-400",
     push: "text-gray-400",
     lose: "text-red-400",
     bust: "text-red-400",
-  }[result ?? ""] ?? "";
+  };
+  const resultColor = result ? (colorMap[result] ?? "") : "";
 
-  const resultLabel = {
+  const labelMap: Record<string, string> = {
     win: `Win +$${hand.bet}`,
     blackjack: `Blackjack! +$${Math.floor(hand.bet * 1.5)}`,
     push: "Push",
     lose: `Lose -$${hand.bet}`,
     bust: `Bust`,
-  }[result ?? ""] ?? "";
+  };
+  const resultLabel = result ? (labelMap[result] ?? "") : "";
 
   return (
     <div
