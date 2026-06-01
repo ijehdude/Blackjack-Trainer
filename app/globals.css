@@ -15,9 +15,9 @@
 body {
   background: radial-gradient(ellipse at 50% 40%, #1e6640 0%, #155c35 35%, #0d3520 70%, #081f14 100%);
   color: white;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: "Tw Cen MT", var(--font-jost), system-ui, sans-serif;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* Card suit colors */

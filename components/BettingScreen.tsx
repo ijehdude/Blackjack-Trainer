@@ -15,7 +15,7 @@ const CHIP_COLOR: Record<number, { bg: string; edge: string; text: string }> = {
   1000: { bg: "#ea580c", edge: "#9a3412", text: "#ffffff" },
 };
 
-function PokerChipSvg({ value, size = 52 }: { value: number; size?: number }) {
+function PokerChipSvg({ value, size = 48 }: { value: number; size?: number }) {
   const { bg, edge, text } = CHIP_COLOR[value];
   const c = size / 2;
   const outerR = size * 0.455;
@@ -28,56 +28,16 @@ function PokerChipSvg({ value, size = 52 }: { value: number; size?: number }) {
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
-      {/* Ground shadow */}
-      <ellipse
-        cx={c + size * 0.04}
-        cy={c + size * 0.1}
-        rx={outerR * 0.82}
-        ry={outerR * 0.16}
-        fill="rgba(0,0,0,0.5)"
-      />
-      {/* Chip body */}
+      <ellipse cx={c + size * 0.04} cy={c + size * 0.1} rx={outerR * 0.82} ry={outerR * 0.16} fill="rgba(0,0,0,0.5)" />
       <circle cx={c} cy={c} r={outerR} fill={bg} />
-      {/* Outer rim highlight */}
       <circle cx={c} cy={c} r={outerR} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-      {/* 8 edge notches */}
       {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
-        <rect
-          key={angle}
-          x={c - notchW / 2}
-          y={c - notchCenterR - notchH / 2}
-          width={notchW}
-          height={notchH}
-          rx={notchW / 2}
-          fill="white"
-          fillOpacity={0.55}
-          transform={`rotate(${angle} ${c} ${c})`}
-        />
+        <rect key={angle} x={c - notchW / 2} y={c - notchCenterR - notchH / 2} width={notchW} height={notchH} rx={notchW / 2} fill="white" fillOpacity={0.55} transform={`rotate(${angle} ${c} ${c})`} />
       ))}
-      {/* Inner circle */}
       <circle cx={c} cy={c} r={innerR} fill={edge} />
       <circle cx={c} cy={c} r={innerR} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-      {/* Denomination */}
-      <text
-        x={c}
-        y={c + fontSize * 0.38}
-        textAnchor="middle"
-        fill={text}
-        fontSize={fontSize}
-        fontWeight="bold"
-        fontFamily="system-ui, sans-serif"
-        letterSpacing="-0.5"
-      >
-        {label}
-      </text>
-      {/* Glossy top highlight */}
-      <ellipse
-        cx={c - size * 0.04}
-        cy={c - outerR * 0.38}
-        rx={outerR * 0.58}
-        ry={outerR * 0.2}
-        fill="rgba(255,255,255,0.18)"
-      />
+      <text x={c} y={c + fontSize * 0.38} textAnchor="middle" fill={text} fontSize={fontSize} fontWeight="bold" fontFamily="Tw Cen MT, system-ui, sans-serif" letterSpacing="-0.5">{label}</text>
+      <ellipse cx={c - size * 0.04} cy={c - outerR * 0.38} rx={outerR * 0.58} ry={outerR * 0.2} fill="rgba(255,255,255,0.18)" />
     </svg>
   );
 }
@@ -94,43 +54,33 @@ function breakdownToDenominations(amount: number): number[] {
   return chips;
 }
 
-const MAX_STACK = 8;
-
 function ChipStack({ amount }: { amount: number }) {
   if (amount <= 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-20">
-        <div className="text-gray-500 text-sm tracking-widest uppercase text-xs">No bet</div>
+      <div className="flex flex-col items-center justify-center h-16">
+        <div className="text-gray-500 text-xs tracking-widest uppercase">No bet</div>
       </div>
     );
   }
-
   const allChips = breakdownToDenominations(amount);
-  const visibleChips = allChips.slice(0, MAX_STACK);
-  const chipSize = 44;
-  const stackStep = 7;
+  const visibleChips = allChips.slice(0, 6);
+  const chipSize = 40;
+  const stackStep = 6;
   const containerH = chipSize + (visibleChips.length - 1) * stackStep;
 
   return (
     <div className="flex flex-col items-center">
-      {/* Stack */}
       <div className="relative" style={{ height: containerH, width: chipSize }}>
         {visibleChips.map((chip, i) => (
-          <div
-            key={i}
-            className="absolute left-0"
-            style={{ bottom: i * stackStep }}
-          >
+          <div key={i} className="absolute left-0" style={{ bottom: i * stackStep }}>
             <PokerChipSvg value={chip} size={chipSize} />
           </div>
         ))}
       </div>
-      {allChips.length > MAX_STACK && (
-        <div className="text-[10px] text-gray-500 mt-0.5">+{allChips.length - MAX_STACK} more</div>
+      {allChips.length > 6 && (
+        <div className="text-[10px] text-gray-500 mt-0.5">+{allChips.length - 6} more</div>
       )}
-      <div className="text-[#c9a84c] text-xl font-bold mt-2">
-        ${amount.toLocaleString()}
-      </div>
+      <div className="text-[#c9a84c] text-lg font-bold mt-1.5">${amount.toLocaleString()}</div>
     </div>
   );
 }
@@ -147,58 +97,39 @@ export default function BettingScreen({ state, dealerName, onDeal, onBetChange, 
   const [repeatLast, setRepeatLast] = useState(false);
 
   function addChip(val: number) {
-    const newBet = Math.min(state.stack, state.currentBet + val);
-    onBetChange(newBet);
+    onBetChange(Math.min(state.stack, state.currentBet + val));
   }
 
   function handleRepeatToggle() {
     const next = !repeatLast;
     setRepeatLast(next);
-    if (next && lastBet > 0) {
-      onBetChange(Math.min(state.stack, lastBet));
-    } else {
-      onBetChange(0);
-    }
+    onBetChange(next && lastBet > 0 ? Math.min(state.stack, lastBet) : 0);
   }
 
   const betReady = state.currentBet > 0 && state.currentBet <= state.stack;
 
   return (
-    <div className="flex flex-col flex-1">
-      {/* Dealer area with rules */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 py-4">
-        <p className="text-gray-400 text-xs uppercase tracking-widest">
-          Dealer — <span className="text-white">{dealerName}</span>
+    <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Compact dealer header */}
+      <div className="flex items-center justify-between px-4 pt-2 pb-2 border-b border-[#1a5c38]/30">
+        <p className="text-[11px] text-gray-400 uppercase tracking-widest">
+          Dealer — <span className="text-white font-semibold">{dealerName}</span>
         </p>
-        <div className="space-y-2 w-full max-w-xs">
-          {[
-            { icon: "🃏", text: "Blackjack pays 3:2" },
-            { icon: "🏛️", text: "Dealer stands on soft 17" },
-            { icon: "🛡️", text: "Insurance pays 2:1" },
-          ].map((rule) => (
-            <div
-              key={rule.text}
-              className="flex items-center gap-3 bg-[#0d2e1c]/60 rounded-xl px-4 py-3 text-sm text-gray-200"
-            >
-              <span className="text-lg">{rule.icon}</span>
-              {rule.text}
-            </div>
-          ))}
-        </div>
+        <p className="text-[9px] text-gray-600 tracking-wide">BJ 3:2 • S17 • Ins 2:1</p>
       </div>
 
-      {/* Seat + betting controls */}
-      <div className="px-4">
-        <div className="border border-[#1a5c38] rounded-xl p-4 bg-[#1a5c38]/20">
-          <p className="text-[#c9a84c] text-xs font-bold uppercase tracking-widest mb-3">Seat 1</p>
+      {/* Main betting area */}
+      <div className="flex-1 flex flex-col justify-between px-4 pt-3 pb-4 overflow-hidden">
+        <div>
+          <p className="text-[#c9a84c] text-[10px] font-bold uppercase tracking-widest mb-2">Seat 1</p>
 
-          {/* Chip stack display */}
-          <div className="flex justify-center mb-4">
+          {/* Chip stack */}
+          <div className="flex justify-center mb-3">
             <ChipStack amount={state.currentBet} />
           </div>
 
-          {/* Chip buttons */}
-          <div className="flex items-center gap-1.5 justify-center flex-wrap mb-3">
+          {/* Chip buttons — single row */}
+          <div className="flex items-center justify-center gap-1.5 mb-3">
             {CHIP_VALUES.map((val) => (
               <button
                 key={val}
@@ -206,38 +137,33 @@ export default function BettingScreen({ state, dealerName, onDeal, onBetChange, 
                 disabled={val > state.stack}
                 className="chip transition-all active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
               >
-                <PokerChipSvg value={val} size={52} />
+                <PokerChipSvg value={val} size={46} />
               </button>
             ))}
           </div>
 
-          {/* Repeat last bet toggle */}
-          <div
-            className="flex items-center justify-between cursor-pointer"
-            onClick={handleRepeatToggle}
-          >
-            <span className="text-xs text-gray-300 uppercase tracking-widest">Repeat Last Bet</span>
-            <div className={`relative w-10 h-5 rounded-full transition-colors ${repeatLast ? "bg-[#c9a84c]" : "bg-gray-600"}`}>
-              <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${repeatLast ? "translate-x-5" : "translate-x-0.5"}`} />
+          {/* Repeat + Clear row */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={handleRepeatToggle}>
+              <span className="text-[10px] text-gray-400 uppercase tracking-widest">Repeat Last</span>
+              <div className={`relative w-9 h-4.5 rounded-full transition-colors flex-shrink-0 ${repeatLast ? "bg-[#c9a84c]" : "bg-gray-600"}`} style={{ height: 18, width: 36 }}>
+                <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-transform ${repeatLast ? "translate-x-4" : "translate-x-0.5"}`} style={{ width: 14, height: 14 }} />
+              </div>
             </div>
+            <button
+              onClick={() => onBetChange(0)}
+              className="text-xs px-4 py-1.5 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-800 transition-colors"
+            >
+              Clear
+            </button>
           </div>
-
-          {/* Clear */}
-          <button
-            onClick={() => onBetChange(0)}
-            className="w-full text-xs py-1.5 mt-3 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-800 transition-colors"
-          >
-            Clear
-          </button>
         </div>
-      </div>
 
-      {/* Deal button */}
-      <div className="px-4 py-4">
+        {/* Deal button */}
         <button
           onClick={onDeal}
           disabled={!betReady}
-          className="w-full py-4 bg-[#c9a84c] hover:bg-[#e0c06a] disabled:opacity-40 text-black font-bold text-lg tracking-widest uppercase rounded-xl transition-all active:scale-95"
+          className="w-full py-3.5 bg-[#c9a84c] hover:bg-[#e0c06a] disabled:opacity-40 text-black font-bold text-base tracking-widest uppercase rounded-xl transition-all active:scale-95 mt-3"
         >
           Deal
         </button>

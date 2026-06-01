@@ -52,7 +52,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col max-w-md mx-auto" style={{ background: "radial-gradient(ellipse at 50% 40%, #1e6640 0%, #155c35 35%, #0d3520 70%, #081f14 100%)" }}>
+    <div className="h-screen overflow-hidden flex flex-col max-w-md mx-auto" style={{ background: "radial-gradient(ellipse at 50% 40%, #1e6640 0%, #155c35 35%, #0d3520 70%, #081f14 100%)" }}>
       <StatsBar
         state={gameState}
         onHome={handleHome}
