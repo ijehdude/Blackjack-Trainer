@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { GameState } from "@/lib/types";
-import { trueCount } from "@/lib/shoe";
-import { kellyBet } from "@/lib/strategy";
 
 const CHIP_VALUES = [1, 5, 25, 50, 100, 500, 1000];
 
@@ -139,8 +137,6 @@ interface BettingScreenProps {
 
 export default function BettingScreen({ state, dealerName, onDeal, onBetChange, lastBet }: BettingScreenProps) {
   const [repeatLast, setRepeatLast] = useState(false);
-  const tc = trueCount(state.runningCount, state.shoe);
-  const suggested = kellyBet(state.stack, tc, 25);
 
   function addChip(val: number) {
     const newBet = Math.min(state.stack, state.currentBet + val);
@@ -218,21 +214,13 @@ export default function BettingScreen({ state, dealerName, onDeal, onBetChange, 
             </div>
           </div>
 
-          {/* Clear + Kelly */}
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => onBetChange(0)}
-              className="flex-1 text-xs py-1.5 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-800 transition-colors"
-            >
-              Clear
-            </button>
-            <button
-              onClick={() => onBetChange(Math.min(state.stack, suggested))}
-              className="flex-1 text-xs py-1.5 rounded-lg border border-green-700 text-green-400 hover:bg-green-900/30 transition-colors"
-            >
-              Kelly ${suggested}
-            </button>
-          </div>
+          {/* Clear */}
+          <button
+            onClick={() => onBetChange(0)}
+            className="w-full text-xs py-1.5 mt-3 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-800 transition-colors"
+          >
+            Clear
+          </button>
         </div>
       </div>
 

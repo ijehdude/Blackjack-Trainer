@@ -12,6 +12,16 @@ interface GameTableProps {
   onNextHand: () => void;
 }
 
+// Standard deal order: player[0], dealer[0], player[1], dealer[1] (hole card)
+// Hit cards (index >= 2) appear immediately with no delay
+function getDealIndex(isDealer: boolean, cardIndex: number): number {
+  if (!isDealer && cardIndex === 0) return 0;
+  if (isDealer  && cardIndex === 0) return 1;
+  if (!isDealer && cardIndex === 1) return 2;
+  if (isDealer  && cardIndex === 1) return 3;
+  return 0;
+}
+
 export default function GameTable({ state, dealerName, onAction, onNextHand }: GameTableProps) {
   const isResult = state.phase === "result";
   const activeHand = state.playerHands[state.activeHandIndex];
@@ -53,7 +63,7 @@ export default function GameTable({ state, dealerName, onAction, onNextHand }: G
         </p>
         <div className="flex gap-2 items-end justify-center min-h-[96px]">
           {state.dealerHand.map((card, i) => (
-            <PlayingCard key={i} card={card} />
+            <PlayingCard key={i} card={card} dealIndex={getDealIndex(true, i)} />
           ))}
         </div>
         {state.dealerHand.length > 0 && (
@@ -201,7 +211,7 @@ function PlayerHandDisplay({
       {/* Cards */}
       <div className="flex gap-2 items-end">
         {hand.cards.map((card, i) => (
-          <PlayingCard key={i} card={card} small />
+          <PlayingCard key={i} card={card} small dealIndex={getDealIndex(false, i)} />
         ))}
       </div>
 
