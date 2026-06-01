@@ -1,6 +1,6 @@
 # Blackjack Strategy Trainer
 
-A mobile-first blackjack strategy trainer built with Next.js 14, TypeScript, and Tailwind CSS. Practice basic strategy, learn Hi-Lo card counting, and get Kelly Criterion bet sizing suggestions — all in a polished casino-green UI.
+A mobile-first blackjack strategy trainer built with Next.js 14, TypeScript, and Tailwind CSS. Practice basic strategy and learn Hi-Lo card counting — all in a polished casino-green UI.
 
 ---
 
