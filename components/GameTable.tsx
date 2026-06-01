@@ -209,7 +209,7 @@ function PlayerHandDisplay({
       </p>
 
       {/* Cards */}
-      <div className="flex gap-2 items-end">
+      <div className="flex gap-2 items-end justify-center">
         {hand.cards.map((card, i) => (
           <PlayingCard key={i} card={card} small dealIndex={getDealIndex(false, i)} />
         ))}
