@@ -28,18 +28,18 @@ function PokerChipSvg({ value, size = 52 }: { value: number; size?: number }) {
 
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
-      {/* Drop shadow */}
+      {/* Ground shadow */}
       <ellipse
-        cx={c}
-        cy={c + size * 0.07}
-        rx={outerR * 0.88}
-        ry={outerR * 0.2}
-        fill="rgba(0,0,0,0.35)"
+        cx={c + size * 0.04}
+        cy={c + size * 0.1}
+        rx={outerR * 0.82}
+        ry={outerR * 0.16}
+        fill="rgba(0,0,0,0.5)"
       />
       {/* Chip body */}
       <circle cx={c} cy={c} r={outerR} fill={bg} />
-      {/* Highlight rim */}
-      <circle cx={c} cy={c} r={outerR} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+      {/* Outer rim highlight */}
+      <circle cx={c} cy={c} r={outerR} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
       {/* 8 edge notches */}
       {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
         <rect
@@ -70,6 +70,14 @@ function PokerChipSvg({ value, size = 52 }: { value: number; size?: number }) {
       >
         {label}
       </text>
+      {/* Glossy top highlight */}
+      <ellipse
+        cx={c - size * 0.04}
+        cy={c - outerR * 0.38}
+        rx={outerR * 0.58}
+        ry={outerR * 0.2}
+        fill="rgba(255,255,255,0.18)"
+      />
     </svg>
   );
 }

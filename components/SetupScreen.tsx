@@ -10,24 +10,69 @@ interface SetupScreenProps {
 const DECK_OPTIONS = [1, 2, 4, 6, 8];
 const STACK_OPTIONS = [500, 1000, 2500, 5000];
 
+const GUIDE = [
+  {
+    action: "Hit",
+    color: "#22d3ee",
+    bg: "rgba(34,211,238,0.07)",
+    border: "rgba(34,211,238,0.2)",
+    desc: "Draw another card to improve your total.",
+    example: "You: 12  vs  Dealer: 7  →  Hit",
+    tip: "If your total is below 17 and the dealer shows a strong card (7–Ace), keep hitting.",
+  },
+  {
+    action: "Stand",
+    color: "#4ade80",
+    bg: "rgba(74,222,128,0.07)",
+    border: "rgba(74,222,128,0.2)",
+    desc: "Keep your hand and let the dealer play.",
+    example: "You: 16  vs  Dealer: 6  →  Stand",
+    tip: "When the dealer shows 2–6, they're likely to bust. Stand even on a weak total like 12–16.",
+  },
+  {
+    action: "Double",
+    color: "#c084fc",
+    bg: "rgba(192,132,252,0.07)",
+    border: "rgba(192,132,252,0.2)",
+    desc: "Double your bet and receive exactly one more card.",
+    example: "You: 11  vs  Dealer: 6  →  Double",
+    tip: "Always double on 11. Double on 10 unless the dealer shows 10 or Ace.",
+  },
+  {
+    action: "Split",
+    color: "#fbbf24",
+    bg: "rgba(251,191,36,0.07)",
+    border: "rgba(251,191,36,0.2)",
+    desc: "Split a pair into two separate hands, each with its own bet.",
+    example: "You: A–A  or  8–8  →  Always Split",
+    tip: "Always split Aces and 8s. Never split 10s, 5s, or 4s.",
+  },
+  {
+    action: "Surrender",
+    color: "#f87171",
+    bg: "rgba(248,113,113,0.07)",
+    border: "rgba(248,113,113,0.2)",
+    desc: "Fold and recover half your bet when your chances are very low.",
+    example: "You: 16  vs  Dealer: A  →  Surrender",
+    tip: "Surrender 16 vs 9, 10, or Ace. Surrender 15 vs 10.",
+  },
+];
+
 export default function SetupScreen({ onStart }: SetupScreenProps) {
   const [numDecks, setNumDecks] = useState(6);
   const [startingStack, setStartingStack] = useState(1000);
   const [customStack, setCustomStack] = useState("1000");
   const [lateSurrender, setLateSurrender] = useState(true);
   const [doubleAfterSplit, setDoubleAfterSplit] = useState(true);
+  const [showGuide, setShowGuide] = useState(false);
+  const [activeGuide, setActiveGuide] = useState<number | null>(null);
 
   const effectiveStack = STACK_OPTIONS.includes(startingStack)
     ? startingStack
     : parseInt(customStack, 10) || 1000;
 
   function handleStart() {
-    onStart({
-      numDecks,
-      startingStack: effectiveStack,
-      lateSurrender,
-      doubleAfterSplit,
-    });
+    onStart({ numDecks, startingStack: effectiveStack, lateSurrender, doubleAfterSplit });
   }
 
   return (
@@ -104,16 +149,71 @@ export default function SetupScreen({ onStart }: SetupScreenProps) {
 
         {/* Rules Toggles */}
         <div className="space-y-2">
-          <Toggle
-            label="Late Surrender Allowed"
-            value={lateSurrender}
-            onChange={setLateSurrender}
-          />
-          <Toggle
-            label="Double After Split (DAS)"
-            value={doubleAfterSplit}
-            onChange={setDoubleAfterSplit}
-          />
+          <Toggle label="Late Surrender Allowed" value={lateSurrender} onChange={setLateSurrender} />
+          <Toggle label="Double After Split (DAS)" value={doubleAfterSplit} onChange={setDoubleAfterSplit} />
+        </div>
+
+        {/* Quick Strategy Guide */}
+        <div>
+          <button
+            onClick={() => { setShowGuide((v) => !v); setActiveGuide(null); }}
+            className="w-full flex items-center justify-between bg-[#1a3260] hover:bg-[#1e3a72] rounded-lg px-4 py-3 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">📖</span>
+              <span className="text-sm text-gray-200 font-medium">Quick Strategy Guide</span>
+            </div>
+            <span className="text-gray-400 text-xs">{showGuide ? "▲ Hide" : "▼ Show"}</span>
+          </button>
+
+          {showGuide && (
+            <div className="mt-2 space-y-2">
+              {GUIDE.map((item, i) => (
+                <div
+                  key={item.action}
+                  className="rounded-lg overflow-hidden cursor-pointer transition-all"
+                  style={{ border: `1px solid ${item.border}`, background: item.bg }}
+                  onClick={() => setActiveGuide(activeGuide === i ? null : i)}
+                >
+                  {/* Header row */}
+                  <div className="flex items-center justify-between px-3 py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="text-xs font-bold uppercase tracking-widest w-16"
+                        style={{ color: item.color }}
+                      >
+                        {item.action}
+                      </span>
+                      <span className="text-xs text-gray-300">{item.desc}</span>
+                    </div>
+                    <span className="text-gray-500 text-xs ml-2 flex-shrink-0">
+                      {activeGuide === i ? "▲" : "▼"}
+                    </span>
+                  </div>
+
+                  {/* Expanded detail */}
+                  {activeGuide === i && (
+                    <div
+                      className="px-3 pb-3 space-y-2 border-t"
+                      style={{ borderColor: item.border }}
+                    >
+                      <div
+                        className="mt-2 rounded px-3 py-2 text-xs font-mono tracking-wide"
+                        style={{ background: "rgba(0,0,0,0.25)", color: item.color }}
+                      >
+                        {item.example}
+                      </div>
+                      <p className="text-[11px] text-gray-400 leading-relaxed">{item.tip}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <p className="text-[10px] text-gray-500 text-center pt-1">
+                Tap any action to see an example. The trainer will correct you in real time.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Game Rules Info */}
@@ -150,16 +250,8 @@ function Toggle({
       onClick={() => onChange(!value)}
     >
       <span className="text-sm text-gray-200 uppercase tracking-wider">{label}</span>
-      <div
-        className={`relative w-11 h-6 rounded-full transition-colors ${
-          value ? "bg-[#c9a84c]" : "bg-gray-600"
-        }`}
-      >
-        <div
-          className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-            value ? "translate-x-5" : "translate-x-0.5"
-          }`}
-        />
+      <div className={`relative w-11 h-6 rounded-full transition-colors ${value ? "bg-[#c9a84c]" : "bg-gray-600"}`}>
+        <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${value ? "translate-x-5" : "translate-x-0.5"}`} />
       </div>
     </div>
   );

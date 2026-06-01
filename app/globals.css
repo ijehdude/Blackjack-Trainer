@@ -24,10 +24,18 @@ body {
 .suit-red { color: #e53e3e; }
 .suit-black { color: #1a202c; }
 
-/* Chip glow on hover */
+/* Poker chip shadow + hover lift */
+.chip {
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)) drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
 .chip:hover {
-  filter: brightness(1.15);
-  transform: translateY(-2px);
+  filter: drop-shadow(0 7px 14px rgba(0,0,0,0.7)) drop-shadow(0 2px 5px rgba(0,0,0,0.45)) brightness(1.1);
+  transform: translateY(-3px);
+}
+.chip:active {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  transform: translateY(1px) scale(0.93);
 }
 
 /* Card deal — slides from above like dealt from a shoe, with slight bounce */
