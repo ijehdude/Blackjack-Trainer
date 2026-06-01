@@ -6,15 +6,128 @@ import { trueCount } from "@/lib/shoe";
 import { kellyBet } from "@/lib/strategy";
 
 const CHIP_VALUES = [1, 5, 25, 50, 100, 500, 1000];
-const CHIP_STYLES: Record<number, string> = {
-  1:    "bg-gray-300 text-gray-800 border-gray-400",
-  5:    "bg-red-600 text-white border-red-400",
-  25:   "bg-green-600 text-white border-green-400",
-  50:   "bg-blue-600 text-white border-blue-400",
-  100:  "bg-gray-500 text-white border-gray-400",
-  500:  "bg-purple-600 text-white border-purple-400",
-  1000: "bg-orange-500 text-white border-orange-400",
+
+const CHIP_COLOR: Record<number, { bg: string; edge: string; text: string }> = {
+  1:    { bg: "#c8c8c8", edge: "#a0a0a0", text: "#1f2937" },
+  5:    { bg: "#dc2626", edge: "#991b1b", text: "#ffffff" },
+  25:   { bg: "#16a34a", edge: "#14532d", text: "#ffffff" },
+  50:   { bg: "#2563eb", edge: "#1e3a8a", text: "#ffffff" },
+  100:  { bg: "#52525b", edge: "#27272a", text: "#ffffff" },
+  500:  { bg: "#7c3aed", edge: "#4c1d95", text: "#ffffff" },
+  1000: { bg: "#ea580c", edge: "#9a3412", text: "#ffffff" },
 };
+
+function PokerChipSvg({ value, size = 52 }: { value: number; size?: number }) {
+  const { bg, edge, text } = CHIP_COLOR[value];
+  const c = size / 2;
+  const outerR = size * 0.455;
+  const innerR = size * 0.295;
+  const notchCenterR = size * 0.375;
+  const notchW = size * 0.115;
+  const notchH = size * 0.13;
+  const fontSize = size * 0.195;
+  const label = value >= 1000 ? `${value / 1000}K` : String(value);
+
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+      {/* Drop shadow */}
+      <ellipse
+        cx={c}
+        cy={c + size * 0.07}
+        rx={outerR * 0.88}
+        ry={outerR * 0.2}
+        fill="rgba(0,0,0,0.35)"
+      />
+      {/* Chip body */}
+      <circle cx={c} cy={c} r={outerR} fill={bg} />
+      {/* Highlight rim */}
+      <circle cx={c} cy={c} r={outerR} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+      {/* 8 edge notches */}
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+        <rect
+          key={angle}
+          x={c - notchW / 2}
+          y={c - notchCenterR - notchH / 2}
+          width={notchW}
+          height={notchH}
+          rx={notchW / 2}
+          fill="white"
+          fillOpacity={0.55}
+          transform={`rotate(${angle} ${c} ${c})`}
+        />
+      ))}
+      {/* Inner circle */}
+      <circle cx={c} cy={c} r={innerR} fill={edge} />
+      <circle cx={c} cy={c} r={innerR} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      {/* Denomination */}
+      <text
+        x={c}
+        y={c + fontSize * 0.38}
+        textAnchor="middle"
+        fill={text}
+        fontSize={fontSize}
+        fontWeight="bold"
+        fontFamily="system-ui, sans-serif"
+        letterSpacing="-0.5"
+      >
+        {label}
+      </text>
+    </svg>
+  );
+}
+
+function breakdownToDenominations(amount: number): number[] {
+  const denoms = [1000, 500, 100, 50, 25, 5, 1];
+  const chips: number[] = [];
+  let remaining = amount;
+  for (const d of denoms) {
+    const count = Math.floor(remaining / d);
+    for (let i = 0; i < count; i++) chips.push(d);
+    remaining -= count * d;
+  }
+  return chips;
+}
+
+const MAX_STACK = 8;
+
+function ChipStack({ amount }: { amount: number }) {
+  if (amount <= 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-20">
+        <div className="text-gray-500 text-sm tracking-widest uppercase text-xs">No bet</div>
+      </div>
+    );
+  }
+
+  const allChips = breakdownToDenominations(amount);
+  const visibleChips = allChips.slice(0, MAX_STACK);
+  const chipSize = 44;
+  const stackStep = 7;
+  const containerH = chipSize + (visibleChips.length - 1) * stackStep;
+
+  return (
+    <div className="flex flex-col items-center">
+      {/* Stack */}
+      <div className="relative" style={{ height: containerH, width: chipSize }}>
+        {visibleChips.map((chip, i) => (
+          <div
+            key={i}
+            className="absolute left-0"
+            style={{ bottom: i * stackStep }}
+          >
+            <PokerChipSvg value={chip} size={chipSize} />
+          </div>
+        ))}
+      </div>
+      {allChips.length > MAX_STACK && (
+        <div className="text-[10px] text-gray-500 mt-0.5">+{allChips.length - MAX_STACK} more</div>
+      )}
+      <div className="text-[#c9a84c] text-xl font-bold mt-2">
+        ${amount.toLocaleString()}
+      </div>
+    </div>
+  );
+}
 
 interface BettingScreenProps {
   state: GameState;
@@ -70,28 +183,33 @@ export default function BettingScreen({ state, dealerName, onDeal, onBetChange, 
         </div>
       </div>
 
-      {/* Seat + chips */}
+      {/* Seat + betting controls */}
       <div className="px-4">
         <div className="border border-[#1a5c38] rounded-xl p-4 bg-[#1a5c38]/20">
           <p className="text-[#c9a84c] text-xs font-bold uppercase tracking-widest mb-3">Seat 1</p>
 
-          {/* Chip row */}
-          <div className="flex items-center gap-1.5 justify-center flex-wrap">
+          {/* Chip stack display */}
+          <div className="flex justify-center mb-4">
+            <ChipStack amount={state.currentBet} />
+          </div>
+
+          {/* Chip buttons */}
+          <div className="flex items-center gap-1.5 justify-center flex-wrap mb-3">
             {CHIP_VALUES.map((val) => (
               <button
                 key={val}
                 onClick={() => addChip(val)}
                 disabled={val > state.stack}
-                className={`chip w-12 h-12 rounded-full font-bold text-[11px] border-2 shadow-lg transition-all active:scale-95 disabled:opacity-30 ${CHIP_STYLES[val]}`}
+                className="chip transition-all active:scale-90 disabled:opacity-30 disabled:pointer-events-none"
               >
-                {val >= 1000 ? `${val / 1000}K` : val}
+                <PokerChipSvg value={val} size={52} />
               </button>
             ))}
           </div>
 
           {/* Repeat last bet toggle */}
           <div
-            className="flex items-center justify-between mt-4 cursor-pointer"
+            className="flex items-center justify-between cursor-pointer"
             onClick={handleRepeatToggle}
           >
             <span className="text-xs text-gray-300 uppercase tracking-widest">Repeat Last Bet</span>
@@ -100,15 +218,8 @@ export default function BettingScreen({ state, dealerName, onDeal, onBetChange, 
             </div>
           </div>
 
-          {/* Bet amount display */}
-          <div className="mt-3 bg-[#0d2e1c]/60 rounded-lg px-4 py-2 text-center">
-            <span className="text-[#c9a84c] text-lg font-bold">
-              {state.currentBet > 0 ? `$${state.currentBet.toLocaleString()}` : "—"}
-            </span>
-          </div>
-
-          {/* Clear + Kelly row */}
-          <div className="flex gap-2 mt-2">
+          {/* Clear + Kelly */}
+          <div className="flex gap-2 mt-3">
             <button
               onClick={() => onBetChange(0)}
               className="flex-1 text-xs py-1.5 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-800 transition-colors"
