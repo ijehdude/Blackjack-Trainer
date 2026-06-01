@@ -1,12 +1,6 @@
-/**
- * Basic strategy for 6-deck, S17, DAS, late surrender.
- * Returns the optimal action for a given player hand vs dealer upcard.
- */
-
 import { Card, PlayerAction } from "./types";
 import { handValue, cardValue } from "./shoe";
 
-// Dealer upcard index: 2→0, 3→1, ..., 9→7, 10/J/Q/K→8, A→9
 function dealerIdx(rank: string): number {
   if (rank === "A") return 9;
   const v = ["J","Q","K"].includes(rank) ? 10 : parseInt(rank, 10);
@@ -14,31 +8,19 @@ function dealerIdx(rank: string): number {
   return v - 2;
 }
 
-// Hard totals strategy (no pair, no soft)
-// Rows: hard 5–21, Cols: dealer 2,3,4,5,6,7,8,9,10,A
 const HARD: PlayerAction[][] = [
-  // 5  6  7  8
   Array(10).fill("hit"),
   Array(10).fill("hit"),
   Array(10).fill("hit"),
   Array(10).fill("hit"),
-  // 9: Double vs 3-6 else Hit
   ["hit","double","double","double","double","hit","hit","hit","hit","hit"],
-  // 10: Double vs 2-9 else Hit
   ["double","double","double","double","double","double","double","double","hit","hit"],
-  // 11: Double vs 2-10, Hit vs A
   ["double","double","double","double","double","double","double","double","double","hit"],
-  // 12: Stand vs 4-6 else Hit
   ["hit","hit","stand","stand","stand","hit","hit","hit","hit","hit"],
-  // 13: Stand vs 2-6 else Hit
   ["stand","stand","stand","stand","stand","hit","hit","hit","hit","hit"],
-  // 14
   ["stand","stand","stand","stand","stand","hit","hit","hit","hit","hit"],
-  // 15: Stand 2-6, Surrender vs 10/A
   ["stand","stand","stand","stand","stand","hit","hit","hit","surrender","surrender"],
-  // 16: Stand 2-6, Surrender vs 9/10/A
   ["stand","stand","stand","stand","stand","hit","hit","surrender","surrender","surrender"],
-  // 17+: Stand always
   Array(10).fill("stand"),
   Array(10).fill("stand"),
   Array(10).fill("stand"),
@@ -46,51 +28,27 @@ const HARD: PlayerAction[][] = [
   Array(10).fill("stand"),
 ];
 
-// Soft totals (with ace counted as 11)
-// Rows: soft 13 (A,2) through soft 21 (A,10=BJ, n/a)
-// Index = soft total - 13
 const SOFT: PlayerAction[][] = [
-  // A,2 (13): Double vs 5-6 else Hit
   ["hit","hit","hit","double","double","hit","hit","hit","hit","hit"],
-  // A,3 (14)
   ["hit","hit","hit","double","double","hit","hit","hit","hit","hit"],
-  // A,4 (15)
   ["hit","hit","double","double","double","hit","hit","hit","hit","hit"],
-  // A,5 (16)
   ["hit","hit","double","double","double","hit","hit","hit","hit","hit"],
-  // A,6 (17): Double vs 3-6 else Hit
   ["hit","double","double","double","double","hit","hit","hit","hit","hit"],
-  // A,7 (18): Double vs 2-6, Stand vs 7-8, Hit vs 9/10/A
   ["double","double","double","double","double","stand","stand","hit","hit","hit"],
-  // A,8 (19): Stand (Double vs 6 optional, skipping for simplicity)
   Array(10).fill("stand"),
-  // A,9 (20)
   Array(10).fill("stand"),
 ];
 
-// Pairs: DAS allowed
-// Rows: 2,2 through A,A
-// Index = card value - 2 (face/10 = 8, A = 9)
 const PAIRS: PlayerAction[][] = [
-  // 2,2: Split vs 2-7 else Hit
   ["split","split","split","split","split","split","hit","hit","hit","hit"],
-  // 3,3: same
   ["split","split","split","split","split","split","hit","hit","hit","hit"],
-  // 4,4: Split vs 5-6 (DAS) else Hit
   ["hit","hit","hit","split","split","hit","hit","hit","hit","hit"],
-  // 5,5: Never split (treat as 10)
   ["double","double","double","double","double","double","double","double","hit","hit"],
-  // 6,6: Split vs 2-6 else Hit
   ["split","split","split","split","split","hit","hit","hit","hit","hit"],
-  // 7,7: Split vs 2-7 else Hit
   ["split","split","split","split","split","split","hit","hit","hit","hit"],
-  // 8,8: Always split (surrender vs A if available)
   ["split","split","split","split","split","split","split","split","split","surrender"],
-  // 9,9: Split vs 2-9 except 7; Stand vs 7,10,A
   ["split","split","split","split","split","stand","split","split","stand","stand"],
-  // 10,10: Never split
   Array(10).fill("stand"),
-  // A,A: Always split
   Array(10).fill("split"),
 ];
 
@@ -104,28 +62,20 @@ export function getCorrectAction(
   const di = dealerIdx(dealerUpcard.rank);
   const { value, soft } = handValue(playerCards);
 
-  // Check for pair
   if (canSplit && playerCards.length === 2) {
+    const v1 = cardValue(playerCards[0].rank);
+    const v2 = cardValue(playerCards[1].rank);
     const r1 = playerCards[0].rank;
     const r2 = playerCards[1].rank;
-    const v1 = cardValue(r1);
-    const v2 = cardValue(r2);
-    const bothTens = v1 === 10 && v2 === 10 && v1 === v2;
-    const pairVal = (v1 === v2 || (v1 >= 10 && v2 >= 10));
-    if (pairVal) {
+    const isPair = v1 === v2 || (v1 >= 10 && v2 >= 10);
+    if (isPair) {
       let pairIdx: number;
-      if (r1 === "A" || r2 === "A") {
-        pairIdx = 9;
-      } else if (bothTens || (v1 >= 10 && v2 >= 10)) {
-        pairIdx = 8;
-      } else {
-        pairIdx = v1 - 2;
-      }
+      if (r1 === "A" || r2 === "A") pairIdx = 9;
+      else if (v1 >= 10) pairIdx = 8;
+      else pairIdx = v1 - 2;
       const rec = PAIRS[pairIdx]?.[di] ?? "stand";
-      // If rec is split but can't split, fall through to hard/soft
       if (rec === "split" && canSplit) return "split";
       if (rec === "surrender" && canSurrender) return "surrender";
-      // Fall through for non-split recommendations on pairs
       if (rec !== "split") {
         if (rec === "double" && !canDouble) return "hit";
         return rec;
@@ -133,7 +83,6 @@ export function getCorrectAction(
     }
   }
 
-  // Soft hand
   if (soft && value >= 13 && value <= 20) {
     const idx = value - 13;
     let rec = SOFT[idx]?.[di] ?? "stand";
@@ -142,7 +91,6 @@ export function getCorrectAction(
     return rec;
   }
 
-  // Hard hand
   const clampedVal = Math.max(5, Math.min(value, 21));
   const hardIdx = clampedVal - 5;
   let rec = HARD[hardIdx]?.[di] ?? "stand";
@@ -151,24 +99,108 @@ export function getCorrectAction(
   return rec;
 }
 
-/**
- * Kelly Criterion bet suggestion based on true count.
- * For Hi-Lo, each +1 TC adds ~0.5% edge.
- * Kelly: f = edge / odds, bet = f * bankroll
- * We cap at 8 units and floor at 1 unit.
- */
-export function kellyBet(
-  stack: number,
-  tc: number,
-  minBet: number
-): number {
-  // Edge per TC above 1 is roughly 0.5%
+export function getActionExplanation(
+  playerCards: Card[],
+  dealerUpcard: Card,
+  correctAction: PlayerAction,
+  playerAction: PlayerAction
+): string {
+  const { value, soft } = handValue(playerCards);
+  const dealerVal = cardValue(dealerUpcard.rank);
+  const dealerStr = dealerUpcard.rank === "A" ? "Ace" : `${dealerVal}`;
+  const isWeak = dealerVal >= 2 && dealerVal <= 6;
+  const isMed = dealerVal >= 7 && dealerVal <= 9;
+  const isStrong = dealerVal >= 10;
+
+  const correct = correctAction === playerAction;
+
+  // Pairs
+  if (playerCards.length === 2) {
+    const v1 = cardValue(playerCards[0].rank);
+    const v2 = cardValue(playerCards[1].rank);
+    if (v1 === v2 || (v1 >= 10 && v2 >= 10)) {
+      const r = playerCards[0].rank;
+      if (r === "A") return correct
+        ? "Always split Aces — each Ace gives you a strong starting hand."
+        : "Always split Aces. Each becomes a new hand starting with 11.";
+      if (v1 === 8) return correct
+        ? "Always split 8s — 16 is the worst hand in blackjack."
+        : "Always split 8s. Hard 16 loses more often than two separate 8s.";
+      if (v1 === 5) return correct
+        ? "Never split 5s — treat them as hard 10 and double instead."
+        : "Never split 5s. Hard 10 is powerful; two 5s are not.";
+      if (v1 === 10) return correct
+        ? "Never split 10s — 20 is already a winning hand."
+        : "Never split 10s. You're sitting on 20 — don't break it up.";
+    }
+  }
+
+  // Surrender
+  if (correctAction === "surrender") return correct
+    ? `Surrendering hard ${value} vs dealer ${dealerStr} saves half your bet — you'd lose this more than half the time.`
+    : `Should surrender hard ${value} vs dealer ${dealerStr}. You lose this hand over 50% of the time, so giving up half is the better play.`;
+
+  // Soft hands
+  if (soft && value <= 20) {
+    if (correctAction === "double") return correct
+      ? `Soft ${value} vs dealer ${dealerStr}: Double to squeeze extra value — dealer is weak and you can't bust.`
+      : `Double soft ${value} vs dealer ${dealerStr}. The dealer is likely to bust, and you can't go bust on one card.`;
+    if (correctAction === "stand") return correct
+      ? `Soft 18 vs dealer ${dealerStr}: Standing is correct — hitting risks turning a good hand into a worse one.`
+      : `Stand on soft 18 vs dealer ${dealerStr}. Hitting risks making it worse; 18 already beats many dealer outcomes.`;
+    return correct
+      ? `Soft ${value} vs dealer ${dealerStr}: Hit to improve — you can't bust and need a stronger total.`
+      : `Hit soft ${value} vs dealer ${dealerStr}. You can't bust, and ${value} isn't strong enough to stand on here.`;
+  }
+
+  // Hard hands
+  if (correctAction === "double") return correct
+    ? `Hard ${value} vs dealer ${dealerStr}: Double down — high chance of landing a strong total against a weak dealer.`
+    : `Double hard ${value} vs dealer ${dealerStr}. You're likely to make 18-21, and the dealer is vulnerable.`;
+
+  if (correctAction === "stand") {
+    if (value >= 17) return correct
+      ? `Hard ${value}: Always stand — the risk of busting outweighs any gain from hitting.`
+      : `Stand on hard ${value}. Any card above 4 busts you — it's not worth the risk.`;
+    if (isWeak) return correct
+      ? `Hard ${value} vs dealer ${dealerStr}: Stand and let the dealer bust — they show a weak card (${dealerStr}).`
+      : `Stand on hard ${value} vs dealer ${dealerStr}. Dealer is weak; let them draw into a bust instead of risking your hand.`;
+    return correct
+      ? `Hard ${value} vs dealer ${dealerStr}: Standing is correct here.`
+      : `Stand on hard ${value} vs dealer ${dealerStr} — the math favors protecting your hand.`;
+  }
+
+  if (correctAction === "hit") {
+    if (value <= 11) return correct
+      ? `Hard ${value}: Always hit — you can't bust and need a higher total.`
+      : `Hit hard ${value}. You cannot bust with one card; always take another.`;
+    if (isStrong || isMed) return correct
+      ? `Hard ${value} vs dealer ${dealerStr}: Hit — dealer is too strong to risk standing here.`
+      : `Hit hard ${value} vs dealer ${dealerStr}. Dealer has a strong upcard; standing on ${value} isn't enough.`;
+    return correct
+      ? `Hard ${value} vs dealer ${dealerStr}: Hit is correct here.`
+      : `Hit hard ${value} vs dealer ${dealerStr}. Your total isn't strong enough to stand against this upcard.`;
+  }
+
+  return correct
+    ? "Good play — that's exactly right."
+    : `The correct play is to ${correctAction}.`;
+}
+
+export function kellyBet(stack: number, tc: number, minBet: number): number {
   const edge = (tc - 1) * 0.005;
   if (edge <= 0) return minBet;
-  // Half-Kelly for safety
   const fraction = edge / 2;
   const rawBet = stack * fraction;
-  // Round to nearest minBet increment, max 8x min
   const units = Math.min(8, Math.max(1, Math.round(rawBet / minBet)));
   return units * minBet;
+}
+
+export const DEALER_NAMES = [
+  "Marcus","Diana","Chen","Sofia","Andre","Priya","Luca","Zara",
+  "Omar","Elena","Kai","Nadia","Remi","Yuki","Darius","Isla",
+];
+
+export function randomDealerName(): string {
+  return DEALER_NAMES[Math.floor(Math.random() * DEALER_NAMES.length)];
 }

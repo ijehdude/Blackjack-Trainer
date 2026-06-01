@@ -11,39 +11,45 @@ const RED_SUITS = ["♥", "♦"];
 
 export default function PlayingCard({ card, small }: PlayingCardProps) {
   const isRed = RED_SUITS.includes(card.suit);
-  const size = small ? "w-12 h-16 text-sm" : "w-16 h-24 text-base";
+  const w = small ? "w-14 h-20" : "w-16 h-24";
 
   if (card.faceDown) {
     return (
       <div
-        className={`${size} rounded-lg border border-gray-600 bg-[#1e3a8a] flex items-center justify-center card-deal shadow-md`}
+        className={`${w} rounded-lg border border-gray-600 shadow-md card-deal flex-shrink-0`}
         style={{
-          backgroundImage:
-            "repeating-linear-gradient(45deg, #1e3a8a, #1e3a8a 5px, #1a3272 5px, #1a3272 10px)",
+          background: "repeating-linear-gradient(135deg,#1e3a8a 0px,#1e3a8a 6px,#1a3272 6px,#1a3272 12px)",
         }}
       />
     );
   }
 
+  const color = isRed ? "#dc2626" : "#111827";
+
   return (
     <div
-      className={`${size} rounded-lg border border-gray-300 bg-white flex flex-col items-start justify-between p-1 card-deal shadow-md select-none`}
+      className={`${w} rounded-lg bg-white shadow-md card-deal flex-shrink-0 relative select-none border border-gray-200`}
     >
-      <div className={`font-bold leading-none ${isRed ? "text-red-600" : "text-gray-900"}`}>
-        <div className="text-xs leading-none">{card.rank}</div>
+      {/* Top-left rank + suit */}
+      <div className="absolute top-1 left-1.5 leading-none" style={{ color }}>
+        <div className="font-bold text-sm leading-none">{card.rank}</div>
         <div className="text-xs leading-none">{card.suit}</div>
       </div>
+
+      {/* Center suit */}
       <div
-        className={`text-xl font-bold self-center ${isRed ? "text-red-600" : "text-gray-900"}`}
+        className="absolute inset-0 flex items-center justify-center text-2xl"
+        style={{ color }}
       >
         {card.suit}
       </div>
+
+      {/* Bottom-right rank + suit (rotated) */}
       <div
-        className={`font-bold leading-none self-end rotate-180 ${
-          isRed ? "text-red-600" : "text-gray-900"
-        }`}
+        className="absolute bottom-1 right-1.5 leading-none rotate-180"
+        style={{ color }}
       >
-        <div className="text-xs leading-none">{card.rank}</div>
+        <div className="font-bold text-sm leading-none">{card.rank}</div>
         <div className="text-xs leading-none">{card.suit}</div>
       </div>
     </div>
