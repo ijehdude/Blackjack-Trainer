@@ -28,7 +28,8 @@ export default function SetupScreen({ onStart }: SetupScreenProps) {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#0f1f3d] flex flex-col px-5 pt-5 pb-4">
+    <div className="h-screen overflow-hidden bg-[#0f1f3d] flex flex-col items-center px-5 pt-5 pb-4">
+      <div className="w-full max-w-sm flex flex-col flex-1">
       {/* Header */}
       <div className="text-center mb-4">
         <div className="text-3xl mb-0.5">🃏</div>
@@ -132,6 +133,7 @@ export default function SetupScreen({ onStart }: SetupScreenProps) {
             Deal Me In
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
