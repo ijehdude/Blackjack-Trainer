@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --felt: #1a5c38;
+  --felt-dark: #123d26;
+  --gold: #c9a84c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #123d26;
+  color: white;
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Card suit colors */
+.suit-red { color: #e53e3e; }
+.suit-black { color: #1a202c; }
+
+/* Chip glow on hover */
+.chip:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+}
+
+/* Card flip animation */
+@keyframes dealCard {
+  from { transform: translateY(-20px) scale(0.9); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.card-deal {
+  animation: dealCard 0.2s ease-out;
+}
+
+/* Pulse for correct/incorrect */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(72, 187, 120, 0); }
+}
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 101, 101, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(245, 101, 101, 0); }
+}
+.pulse-correct { animation: pulse-green 0.6s ease-out; }
+.pulse-wrong { animation: pulse-red 0.6s ease-out; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #123d26; }
+::-webkit-scrollbar-thumb { background: #1a5c38; border-radius: 3px; }
