@@ -229,10 +229,8 @@ export function playerAction(state: GameState, action: PlayerAction): GameState 
 }
 
 function advanceOrResolve(state: GameState): GameState {
-  // Find next active hand
-  const next = state.playerHands.findIndex(
-    (h, i) => i > state.activeHandIndex && !h.stood && !h.result
-  );
+  // Find any unfinished hand — order-independent so player can act on hands freely
+  const next = state.playerHands.findIndex((h) => !h.stood && !h.result);
   if (next !== -1) {
     return { ...state, activeHandIndex: next };
   }

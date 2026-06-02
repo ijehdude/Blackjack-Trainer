@@ -10,6 +10,7 @@ interface GameTableProps {
   dealerName: string;
   onAction: (action: PlayerAction) => void;
   onNextHand: () => void;
+  onSelectHand: (index: number) => void;
 }
 
 // Standard deal order: player[0], dealer[0], player[1], dealer[1] (hole card)
@@ -22,7 +23,7 @@ function getDealIndex(isDealer: boolean, cardIndex: number): number {
   return 0;
 }
 
-export default function GameTable({ state, dealerName, onAction, onNextHand }: GameTableProps) {
+export default function GameTable({ state, dealerName, onAction, onNextHand, onSelectHand }: GameTableProps) {
   const isResult = state.phase === "result";
   const activeHand = state.playerHands[state.activeHandIndex];
   const dealerFaceCards = state.dealerHand.filter((c) => !c.faceDown);
@@ -55,7 +56,7 @@ export default function GameTable({ state, dealerName, onAction, onNextHand }: G
       : null;
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Dealer area */}
       <div className="flex flex-col items-center px-4 pt-4 pb-2">
         <p className="text-gray-400 text-xs uppercase tracking-widest mb-2">
@@ -80,16 +81,26 @@ export default function GameTable({ state, dealerName, onAction, onNextHand }: G
       </div>
 
       {/* Player hands */}
-      <div className="flex-1 px-4 space-y-2 overflow-y-auto">
-        {state.playerHands.map((hand, hi) => (
-          <PlayerHandDisplay
-            key={hi}
-            hand={hand}
-            isActive={hi === state.activeHandIndex && state.phase === "playerTurn"}
-            isResult={isResult}
-            label={state.playerHands.length > 1 ? `Hand ${hi + 1}` : "Seat 1"}
-          />
-        ))}
+      <div className="flex-1 px-4 space-y-2 overflow-y-auto py-2">
+        {state.playerHands.map((hand, hi) => {
+          const isActive = hi === state.activeHandIndex && state.phase === "playerTurn";
+          const isSelectable =
+            !isActive &&
+            state.phase === "playerTurn" &&
+            !hand.stood &&
+            !hand.result;
+          return (
+            <PlayerHandDisplay
+              key={hi}
+              hand={hand}
+              isActive={isActive}
+              isSelectable={isSelectable}
+              isResult={isResult}
+              label={state.playerHands.length > 1 ? `Hand ${hi + 1}` : "Seat 1"}
+              onSelect={isSelectable ? () => onSelectHand(hi) : undefined}
+            />
+          );
+        })}
       </div>
 
       {/* Bottom action area */}
@@ -168,13 +179,17 @@ export default function GameTable({ state, dealerName, onAction, onNextHand }: G
 function PlayerHandDisplay({
   hand,
   isActive,
+  isSelectable,
   isResult,
   label,
+  onSelect,
 }: {
   hand: Hand;
   isActive: boolean;
+  isSelectable: boolean;
   isResult: boolean;
   label: string;
+  onSelect?: () => void;
 }) {
   const { value, soft } = handValue(hand.cards);
   const bust = value > 21;
@@ -198,15 +213,25 @@ function PlayerHandDisplay({
 
   return (
     <div
+      onClick={onSelect}
       className={`rounded-xl px-4 py-3 border transition-all ${
         isActive
           ? "border-[#c9a84c] bg-[#1a5c38]/30"
+          : isSelectable
+          ? "border-white/25 bg-[#1a5c38]/15 cursor-pointer active:scale-[0.98]"
           : "border-[#1a5c38]/60 bg-[#1a5c38]/10"
       }`}
     >
-      <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isActive ? "text-[#c9a84c]" : "text-gray-400"}`}>
-        {label}
-      </p>
+      <div className="flex items-center justify-between mb-2">
+        <p className={`text-xs font-bold uppercase tracking-widest ${
+          isActive ? "text-[#c9a84c]" : isSelectable ? "text-white/70" : "text-gray-400"
+        }`}>
+          {label}
+        </p>
+        {isSelectable && (
+          <span className="text-[10px] text-white/40 uppercase tracking-widest">Tap to play ▶</span>
+        )}
+      </div>
 
       {/* Cards */}
       <div className="flex gap-2 items-end justify-center">

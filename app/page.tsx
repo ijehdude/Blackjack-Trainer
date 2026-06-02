@@ -60,7 +60,7 @@ export default function Home() {
         onToggleCount={() => setShowCount((v) => !v)}
       />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {gameState.phase === "betting" ? (
           <BettingScreen
             state={gameState}
@@ -75,6 +75,9 @@ export default function Home() {
             dealerName={dealerName}
             onAction={handleAction}
             onNextHand={handleNextHand}
+            onSelectHand={(index) =>
+              setGameState({ ...gameState, activeHandIndex: index })
+            }
           />
         )}
       </div>
