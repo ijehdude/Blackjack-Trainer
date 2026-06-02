@@ -142,6 +142,10 @@ export default function GameTable({ state, dealerName, onAction, onNextHand, onS
               Next Hand
             </button>
           </>
+        ) : state.phase === "dealerTurn" ? (
+          <p className="text-center text-gray-500 text-xs uppercase tracking-widest py-2 animate-pulse">
+            Dealer&rsquo;s turn…
+          </p>
         ) : canAct ? (
           <>
             {/* Hit / Stand / Double row */}

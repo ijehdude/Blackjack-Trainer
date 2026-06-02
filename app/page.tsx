@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GameState, GameSettings, PlayerAction } from "@/lib/types";
-import { createInitialState, startDeal, playerAction, nextHand } from "@/lib/gameEngine";
+import { createInitialState, startDeal, playerAction, nextHand, dealerStep } from "@/lib/gameEngine";
 import { randomDealerName } from "@/lib/strategy";
 import SetupScreen from "@/components/SetupScreen";
 import BettingScreen from "@/components/BettingScreen";
@@ -39,6 +39,17 @@ export default function Home() {
     if (!gameState) return;
     setGameState(playerAction(gameState, action));
   }
+
+  // Animate dealer's turn — draw one card every 650 ms until done
+  useEffect(() => {
+    if (gameState?.phase !== "dealerTurn") return;
+    const t = setTimeout(
+      () => setGameState((prev) => (prev?.phase === "dealerTurn" ? dealerStep(prev) : prev)),
+      650
+    );
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState?.phase, gameState?.dealerHand.length]);
 
   function handleNextHand() {
     if (!gameState) return;

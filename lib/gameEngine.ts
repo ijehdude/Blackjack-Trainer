@@ -234,13 +234,12 @@ function advanceOrResolve(state: GameState): GameState {
   if (next !== -1) {
     return { ...state, activeHandIndex: next };
   }
-  return dealerPlay(state);
+  return startDealerTurn(state);
 }
 
-function dealerPlay(state: GameState): GameState {
+// Reveal the dealer's hole card and enter the animated dealerTurn phase
+export function startDealerTurn(state: GameState): GameState {
   let s = { ...state };
-
-  // Reveal hole card
   const dealerCards = s.dealerHand.map((c) => {
     if (c.faceDown) {
       const rc = s.runningCount + hiLoCount(c.rank);
@@ -251,22 +250,23 @@ function dealerPlay(state: GameState): GameState {
   });
   s = { ...s, dealerHand: dealerCards };
 
-  // Check if all player hands are busts/surrenders — skip dealer draw
+  // If every player hand already busted/surrendered, skip dealer draw entirely
   const allBust = s.playerHands.every((h) => h.result === "bust" || h.surrendered);
-  if (!allBust) {
-    // Dealer draws to 17+
-    let { value, soft } = handValue(s.dealerHand);
-    while (value < 17 || (value === 17 && soft)) {
-      let card: Card;
-      [s, card] = dealCard(s);
-      s = { ...s, dealerHand: [...s.dealerHand, card] };
-      const result = handValue(s.dealerHand);
-      value = result.value;
-      soft = result.soft;
-    }
-  }
+  if (allBust) return settleHands(s);
 
-  return settleHands(s);
+  return { ...s, phase: "dealerTurn" };
+}
+
+// Draw exactly one more dealer card, or settle if dealer is done — called repeatedly from the UI
+export function dealerStep(state: GameState): GameState {
+  const { value, soft } = handValue(state.dealerHand);
+  if (value < 17 || (value === 17 && soft)) {
+    let s = { ...state };
+    let card: Card;
+    [s, card] = dealCard(s);
+    return { ...s, dealerHand: [...s.dealerHand, card] };
+  }
+  return settleHands(state);
 }
 
 function settleHands(state: GameState): GameState {
