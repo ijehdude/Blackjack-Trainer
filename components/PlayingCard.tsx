@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/lib/types";
+import { playCardDeal, playCardFlip } from "@/lib/sounds";
 
 interface PlayingCardProps {
   card: Card;
@@ -17,9 +18,18 @@ export default function PlayingCard({ card, small, dealIndex = 0 }: PlayingCardP
   const [isFlipping, setIsFlipping] = useState(false);
   const prevFaceDown = useRef(card.faceDown);
 
+  // Play deal sound when card first mounts, staggered to match animation
+  useEffect(() => {
+    const t = setTimeout(() => playCardDeal(), dealIndex * 150);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Play flip sound and animate when hole card is revealed
   useEffect(() => {
     if (prevFaceDown.current === true && card.faceDown === false) {
       setIsFlipping(true);
+      playCardFlip();
       const t = setTimeout(() => setIsFlipping(false), 400);
       prevFaceDown.current = false;
       return () => clearTimeout(t);
