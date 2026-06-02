@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Card } from "@/lib/types";
 
 interface PlayingCardProps {
@@ -16,29 +16,30 @@ export default function PlayingCard({ card, small, dealIndex = 0 }: PlayingCardP
   const color = isRed ? "#dc2626" : "#111827";
   const w = small ? "w-14 h-20" : "w-16 h-24";
 
-  const [isFlipping, setIsFlipping] = useState(false);
+  // "card-deal" on mount, "card-flip" on hole-card reveal, "" after animations finish
+  const [animClass, setAnimClass] = useState("card-deal");
   const prevFaceDown = useRef(card.faceDown);
 
-  useEffect(() => {
+  // useLayoutEffect fires synchronously after DOM mutation and BEFORE the browser
+  // paints, so by the time the user sees anything the class is already "card-flip"
+  // instead of "card-deal". Using useEffect here would leave one painted frame with
+  // the wrong class, causing the visible flash/disappear-reappear the user sees.
+  useLayoutEffect(() => {
     if (prevFaceDown.current === true && card.faceDown === false) {
-      setIsFlipping(true);
-      const t = setTimeout(() => setIsFlipping(false), 400);
+      setAnimClass("card-flip");
       prevFaceDown.current = false;
+      const t = setTimeout(() => setAnimClass(""), 400);
       return () => clearTimeout(t);
     }
     prevFaceDown.current = card.faceDown;
   }, [card.faceDown]);
 
-  const animClass = isFlipping ? "card-flip" : "card-deal";
-  const delayStyle = isFlipping ? {} : { animationDelay: `${dealIndex * 150}ms` };
-
-  // Single outer div — never unmounts when faceDown changes, preventing the
-  // spurious card-deal re-trigger that caused the hole card to flash on reveal.
   return (
     <div
       className={`${w} rounded-xl flex-shrink-0 relative select-none ${animClass}`}
       style={{
-        ...delayStyle,
+        // Stagger delay only applies to the initial deal slide-in, not the flip
+        animationDelay: animClass === "card-deal" ? `${dealIndex * 150}ms` : "0ms",
         ...(card.faceDown
           ? {
               background: "linear-gradient(145deg, #1e40af, #1e3a8a 50%, #172669)",
