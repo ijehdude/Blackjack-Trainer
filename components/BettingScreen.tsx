@@ -55,32 +55,33 @@ function breakdownToDenominations(amount: number): number[] {
 }
 
 function ChipStack({ amount }: { amount: number }) {
-  if (amount <= 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-16">
-        <div className="text-gray-500 text-xs tracking-widest uppercase">No bet</div>
-      </div>
-    );
-  }
   const allChips = breakdownToDenominations(amount);
   const visibleChips = allChips.slice(0, 6);
   const chipSize = 40;
   const stackStep = 6;
-  const containerH = chipSize + (visibleChips.length - 1) * stackStep;
+  // Always reserve the max stack height (6 chips) so adding chips grows the
+  // stack upward into fixed space instead of pushing the layout below it down.
+  const containerH = chipSize + 5 * stackStep;
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative" style={{ height: containerH, width: chipSize }}>
-        {visibleChips.map((chip, i) => (
-          <div key={i} className="absolute left-0" style={{ bottom: i * stackStep }}>
-            <PokerChipSvg value={chip} size={chipSize} />
-          </div>
-        ))}
+      <div className="relative flex items-end justify-center" style={{ height: containerH, width: chipSize }}>
+        {amount <= 0 ? (
+          <div className="text-gray-500 text-xs tracking-widest uppercase whitespace-nowrap">No bet</div>
+        ) : (
+          visibleChips.map((chip, i) => (
+            <div key={i} className="absolute left-0" style={{ bottom: i * stackStep }}>
+              <PokerChipSvg value={chip} size={chipSize} />
+            </div>
+          ))
+        )}
       </div>
-      {allChips.length > 6 && (
-        <div className="text-[10px] text-gray-500 mt-0.5">+{allChips.length - 6} more</div>
-      )}
-      <div className="text-[#c9a84c] text-lg font-bold mt-1.5">${amount.toLocaleString()}</div>
+      <div className="text-[10px] text-gray-500 mt-0.5 h-3.5">
+        {allChips.length > 6 ? `+${allChips.length - 6} more` : ""}
+      </div>
+      <div className="text-[#c9a84c] text-lg font-bold mt-1.5 h-7">
+        {amount > 0 ? `$${amount.toLocaleString()}` : ""}
+      </div>
     </div>
   );
 }
