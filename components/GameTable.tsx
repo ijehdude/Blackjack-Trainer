@@ -1,8 +1,7 @@
 "use client";
 
-import { GameState, PlayerAction, Hand } from "@/lib/types";
+import { GameState, PlayerAction, Hand, ActionFeedback } from "@/lib/types";
 import { handValue } from "@/lib/shoe";
-import { getActionExplanation } from "@/lib/strategy";
 import PlayingCard from "./PlayingCard";
 
 interface GameTableProps {
@@ -45,14 +44,11 @@ export default function GameTable({ state, dealerName, onAction, onNextHand, onS
     activeHand.cards.length === 2 &&
     state.playerHands.length === 1;
 
-  const explanation =
-    isResult && state.correctAction && state.lastAction && activeHand
-      ? getActionExplanation(
-          activeHand.cards,
-          state.dealerHand[0],
-          state.correctAction,
-          state.lastAction
-        )
+  // Show feedback for the most recent decision while still playing the hand it
+  // belongs to (so every hit is assessed immediately), and again at result.
+  const liveFeedback =
+    canAct && state.lastFeedback?.handIndex === state.activeHandIndex
+      ? state.lastFeedback
       : null;
 
   return (
@@ -107,29 +103,8 @@ export default function GameTable({ state, dealerName, onAction, onNextHand, onS
       <div className="px-4 pb-4 pt-2 space-y-2">
         {isResult ? (
           <>
-            {/* Correct / Wrong */}
-            {state.wasCorrect !== undefined && (
-              <div
-                className={`text-center py-2 rounded-xl text-sm font-bold ${
-                  state.wasCorrect
-                    ? "text-green-400 bg-green-900/30 border border-green-800"
-                    : "text-red-400 bg-red-900/30 border border-red-800"
-                }`}
-              >
-                {state.wasCorrect ? (
-                  "✓ Correct"
-                ) : (
-                  <>✗ Should have <span className="uppercase">{state.correctAction}</span></>
-                )}
-              </div>
-            )}
-
-            {/* Explanation */}
-            {explanation && (
-              <div className="bg-[#0d2e1c] border border-[#1a5c38] rounded-xl px-4 py-3 text-xs text-gray-300 leading-relaxed text-center">
-                {explanation}
-              </div>
-            )}
+            {/* Assessment of the final decision */}
+            {state.lastFeedback && <FeedbackBanner feedback={state.lastFeedback} />}
 
             {state.message && (
               <div className="text-center text-[#c9a84c] text-sm font-bold">{state.message}</div>
@@ -148,6 +123,9 @@ export default function GameTable({ state, dealerName, onAction, onNextHand, onS
           </p>
         ) : canAct ? (
           <>
+            {/* Immediate assessment of your last move on this hand */}
+            {liveFeedback && <FeedbackBanner feedback={liveFeedback} compact />}
+
             {/* Hit / Stand / Double row */}
             <div className="flex gap-2">
               <ActionBtn label="Hit" border="border-cyan-600" text="text-cyan-400" onClick={() => onAction("hit")} />
@@ -267,6 +245,33 @@ function PlayerHandDisplay({
       </div>
 
       <div className="text-[#c9a84c] text-sm font-bold mt-1">${hand.bet.toLocaleString()}</div>
+    </div>
+  );
+}
+
+function FeedbackBanner({ feedback, compact }: { feedback: ActionFeedback; compact?: boolean }) {
+  const { wasCorrect, action, correctAction, explanation } = feedback;
+  return (
+    <div
+      className={`rounded-xl border ${
+        wasCorrect
+          ? "border-green-800 bg-green-900/25"
+          : "border-red-800 bg-red-900/25"
+      } ${compact ? "px-3 py-2" : "px-4 py-3"}`}
+    >
+      <div
+        className={`flex items-center justify-center gap-1.5 text-sm font-bold ${
+          wasCorrect ? "text-green-400" : "text-red-400"
+        }`}
+      >
+        {wasCorrect ? (
+          <>✓ <span className="uppercase">{action}</span> was correct</>
+        ) : (
+          <>✗ <span className="uppercase">{action}</span> — should have{" "}
+            <span className="uppercase">{correctAction}</span></>
+        )}
+      </div>
+      <p className="text-[11px] text-gray-300 leading-relaxed text-center mt-1">{explanation}</p>
     </div>
   );
 }

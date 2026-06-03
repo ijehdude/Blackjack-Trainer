@@ -53,6 +53,16 @@ export interface GameStats {
   pnl: number;
 }
 
+// Feedback captured at the moment an action is taken, so each individual
+// decision (every hit, not just the final one) can be assessed immediately.
+export interface ActionFeedback {
+  action: PlayerAction;
+  correctAction: PlayerAction;
+  wasCorrect: boolean;
+  explanation: string;
+  handIndex: number;
+}
+
 export interface GameState {
   settings: GameSettings;
   phase: GamePhase;
@@ -67,5 +77,6 @@ export interface GameState {
   lastAction?: PlayerAction;
   correctAction?: PlayerAction;
   wasCorrect?: boolean;
+  lastFeedback?: ActionFeedback;
   message?: string;
 }

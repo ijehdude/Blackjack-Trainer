@@ -1,6 +1,6 @@
 import { GameState, GameSettings, Card, PlayerAction, Hand } from "./types";
 import { buildShoe, handValue, hiLoCount, isBlackjack } from "./shoe";
-import { getCorrectAction } from "./strategy";
+import { getCorrectAction, getActionExplanation } from "./strategy";
 
 const RESHUFFLE_PENETRATION = 0.75; // reshuffle when 75% through shoe
 
@@ -60,6 +60,7 @@ export function startDeal(state: GameState): GameState {
     wasCorrect: undefined,
     correctAction: undefined,
     lastAction: undefined,
+    lastFeedback: undefined,
     message: undefined,
   };
 
@@ -133,11 +134,17 @@ export function playerAction(state: GameState, action: PlayerAction): GameState 
   const correct = getCorrectAction(hand.cards, dealerUp, canDouble, canSplit, canSurrender);
   const wasCorrect = action === correct;
 
+  // Assess this specific decision now, using the hand exactly as it was when
+  // the choice was made (before any new card is dealt). This way every hit is
+  // evaluated on its own merits, not just the final action of the hand.
+  const explanation = getActionExplanation(hand.cards, dealerUp, correct, action);
+
   s = {
     ...s,
     lastAction: action,
     correctAction: correct,
     wasCorrect,
+    lastFeedback: { action, correctAction: correct, wasCorrect, explanation, handIndex: handIdx },
     stats: {
       ...s.stats,
       handsPlayed: s.stats.handsPlayed + 1,
@@ -327,6 +334,7 @@ export function nextHand(state: GameState): GameState {
     wasCorrect: undefined,
     correctAction: undefined,
     lastAction: undefined,
+    lastFeedback: undefined,
     message: undefined,
   };
 }

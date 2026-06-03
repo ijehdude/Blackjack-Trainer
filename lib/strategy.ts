@@ -19,7 +19,7 @@ const HARD: PlayerAction[][] = [
   ["hit","hit","stand","stand","stand","hit","hit","hit","hit","hit"],
   ["stand","stand","stand","stand","stand","hit","hit","hit","hit","hit"],
   ["stand","stand","stand","stand","stand","hit","hit","hit","hit","hit"],
-  ["stand","stand","stand","stand","stand","hit","hit","hit","surrender","surrender"],
+  ["stand","stand","stand","stand","stand","hit","hit","hit","surrender","hit"],
   ["stand","stand","stand","stand","stand","hit","hit","surrender","surrender","surrender"],
   Array(10).fill("stand"),
   Array(10).fill("stand"),
@@ -34,7 +34,7 @@ const SOFT: PlayerAction[][] = [
   ["hit","hit","double","double","double","hit","hit","hit","hit","hit"],
   ["hit","hit","double","double","double","hit","hit","hit","hit","hit"],
   ["hit","double","double","double","double","hit","hit","hit","hit","hit"],
-  ["double","double","double","double","double","stand","stand","hit","hit","hit"],
+  ["stand","double","double","double","double","stand","stand","hit","hit","hit"],
   Array(10).fill("stand"),
   Array(10).fill("stand"),
 ];
@@ -46,7 +46,7 @@ const PAIRS: PlayerAction[][] = [
   ["double","double","double","double","double","double","double","double","hit","hit"],
   ["split","split","split","split","split","hit","hit","hit","hit","hit"],
   ["split","split","split","split","split","split","hit","hit","hit","hit"],
-  ["split","split","split","split","split","split","split","split","split","surrender"],
+  ["split","split","split","split","split","split","split","split","split","split"],
   ["split","split","split","split","split","stand","split","split","stand","stand"],
   Array(10).fill("stand"),
   Array(10).fill("split"),
@@ -132,6 +132,14 @@ export function getActionExplanation(
       if (v1 === 10) return correct
         ? "Never split 10s — 20 is already a winning hand."
         : "Never split 10s. You're sitting on 20 — don't break it up.";
+      // Generic split guidance for the remaining pairs (2,3,4,6,7,9).
+      if (correctAction === "split") {
+        return correct
+          ? `Split ${r}s vs dealer ${dealerStr} — two fresh hands beat playing one ${value} against a weak upcard.`
+          : `Split ${r}s vs dealer ${dealerStr}. Against a weak upcard, two new hands win more than one ${value}.`;
+      }
+      // If the correct play is NOT to split (e.g. low pairs vs a strong upcard,
+      // or 9-9 vs 7), fall through to the hard/soft logic below.
     }
   }
 
