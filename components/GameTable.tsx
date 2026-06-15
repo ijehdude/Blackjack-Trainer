@@ -100,7 +100,7 @@ export default function GameTable({ state, dealerName, onAction, onNextHand, onS
       </div>
 
       {/* Bottom action area */}
-      <div className="px-4 pb-4 pt-2 space-y-2">
+      <div className="px-4 pb-safe pt-2 space-y-2">
         {isResult ? (
           <>
             {/* Assessment of the final decision */}

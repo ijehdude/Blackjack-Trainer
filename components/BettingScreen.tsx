@@ -120,7 +120,7 @@ export default function BettingScreen({ state, dealerName, onDeal, onBetChange, 
       </div>
 
       {/* Main betting area */}
-      <div className="flex-1 flex flex-col justify-between px-4 pt-3 pb-4 overflow-hidden">
+      <div className="flex-1 flex flex-col justify-between px-4 pt-3 pb-safe overflow-hidden">
         <div>
           <p className="text-[#c9a84c] text-[10px] font-bold uppercase tracking-widest mb-2">Seat 1</p>
 

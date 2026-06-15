@@ -165,7 +165,7 @@ export default function GuidePage() {
 
   return (
     <div
-      className="h-screen overflow-hidden flex flex-col max-w-md mx-auto"
+      className="h-screen-dvh overflow-hidden flex flex-col max-w-md mx-auto"
       style={{ background: "radial-gradient(ellipse at 50% 40%, #1e6640 0%, #155c35 35%, #0d3520 70%, #081f14 100%)" }}
     >
       {/* Header */}
@@ -198,7 +198,7 @@ export default function GuidePage() {
       </div>
 
       {/* Tab content */}
-      <div className="flex-1 flex flex-col overflow-hidden px-4 pt-4 pb-4">
+      <div className="flex-1 flex flex-col overflow-hidden px-4 pt-4 pb-safe">
         {isCount ? (
           /* ── Running Count tab ── */
           <>

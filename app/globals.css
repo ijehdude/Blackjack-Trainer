@@ -16,8 +16,22 @@ body {
   background: radial-gradient(ellipse at 50% 40%, #1e6640 0%, #155c35 35%, #0d3520 70%, #081f14 100%);
   color: white;
   font-family: "Tw Cen MT", var(--font-jost), system-ui, sans-serif;
-  min-height: 100vh;
+  min-height: 100vh; /* fallback for browsers without dvh support */
+  min-height: 100dvh;
   overflow: hidden;
+}
+
+@layer utilities {
+  /* Full-viewport height that accounts for iOS Safari's dynamic chrome.
+     100vh falls back first; 100dvh wins where supported. */
+  .h-screen-dvh {
+    height: 100vh; /* fallback */
+    height: 100dvh;
+  }
+  /* Keep bottom content above the iOS home indicator. */
+  .pb-safe {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
 }
 
 /* Card suit colors */
